@@ -28,7 +28,7 @@ func main() {
 	v1 := e.Group("/api/v1")
 
 	rc := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", "cache", "6379"),
+		Addr:     fmt.Sprintf("%s:%s", "localhost", "6379"),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
@@ -46,13 +46,21 @@ func main() {
 		})
 	})
 	v1.GET("/profile", func(c echo.Context) error {
-		res := rc.CommandGetKeys(context.Background())
+		res := rc.Keys(context.Background(), "*")
 		strs, err := res.Result()
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
 
-		return c.JSON(http.StatusOK, strs)
+		m := make(map[string]string)
+
+		for _, s := range strs {
+			val := rc.Get(context.Background(), s)
+
+			m[s] = val.String()
+		}
+
+		return c.JSON(http.StatusOK, m)
 	})
 
 	s := &http.Server{
