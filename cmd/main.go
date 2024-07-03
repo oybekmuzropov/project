@@ -28,7 +28,7 @@ func main() {
 	v1 := e.Group("/api/v1")
 
 	rc := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", "localhost", "6379"),
+		Addr:     fmt.Sprintf("%s:%s", "cache", "6379"),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
