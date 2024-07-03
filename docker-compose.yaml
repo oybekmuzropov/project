@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  app:
+    image: project
+    restart: always
+    ports:
+      - "8081:8080"
+    volumes:
+      - app_data:/data
+    depends_on:
+      - db
+      - cache
+#  db:
+#    image: postgres
+#    restart: always
+#    environment:
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_USER=emis
+#      - POSTGRES_DB=emis
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - db:/var/lib/postgresql/data
+  cache:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache:/data
+volumes:
+  app_data:
+  cache:
+#  db:

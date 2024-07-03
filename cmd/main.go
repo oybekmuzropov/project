@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4/middleware"
@@ -22,17 +27,32 @@ func main() {
 
 	v1 := e.Group("/api/v1")
 
+	rc := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", "cache", "6379"),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	c := rc.Ping(context.Background())
+	if c.Err() != nil {
+		panic(c.Err())
+	}
+
 	v1.GET("/user", func(c echo.Context) error {
+		rc.Set(context.Background(), strconv.Itoa(rand.Int()), "user", time.Duration(time.Minute))
 		return c.JSON(http.StatusOK, map[string]string{
 			"url": "user",
 			"ok":  "true",
 		})
 	})
 	v1.GET("/profile", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{
-			"url": "profile",
-			"ok":  "true",
-		})
+		res := rc.CommandGetKeys(context.Background())
+		strs, err := res.Result()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+
+		return c.JSON(http.StatusOK, strs)
 	})
 
 	s := &http.Server{
